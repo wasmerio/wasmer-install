@@ -167,7 +167,7 @@ wasmer_link() {
     wasmer_install_status "check" "$version installed succesfully ✓"
 
     if [ "$WASMER_INSTALL_LOG" = "$WASMER_VERBOSE" ]; then
-      if [ "$wasmer_fresh_install" = true ] ; then
+      if [ "$wasmer_fresh_install" = true ]; then
         printf "wasmer & wapm will be available the next time you open the terminal.\n"
         printf "If you want to have the commands available now please execute:\n\nsource $INSTALL_DIRECTORY/wasmer.sh$reset\n"
       fi
