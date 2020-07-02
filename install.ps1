@@ -12,20 +12,22 @@ if ($args.Length -eq 1) {
 }
 
 $WasmerInstall = $env:WASMER_DIR
-$BinDir = if ($WasmerInstall) {
-  "$WasmerInstall\bin"
+$WasmerDir = if ($WasmerInstall) {
+  "$WasmerInstall"
 } else {
-  "$Home\.wasmer\bin"
+  "$Home\.wasmer"
 }
 
-$WasmerInstaller = "$Home\wasmer-installer.exe"
-$WasmerExe = "$BinDir\wasmer.exe"
+$WasmerInstaller = "$Home\temp-wasmer-installer.exe"
+$WasmerBinDir = "$WasmerDir\bin"
+$WasmerExe = "$WasmerDir\bin\wasmer.exe"
 $Target = 'windows'
 
 # GitHub requires TLS 1.2
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $WasmerInstallerUri = if (!$Version) {
+  Write-Host "Fetching lastest release..."
   $Response = Invoke-WebRequest 'https://github.com/wasmerio/wasmer/releases' -UseBasicParsing
   if ($PSVersionTable.PSEdition -eq 'Core') {
     $Response.Links |
@@ -49,20 +51,32 @@ $WasmerInstallerUri = if (!$Version) {
   "https://github.com/wasmerio/wasmer/releases/download/${Version}/wasmer-${Target}.exe"
 }
 
-if (!(Test-Path $BinDir)) {
-  New-Item $BinDir -ItemType Directory | Out-Null
+if (!(Test-Path $WasmerDir)) {
+  New-Item $WasmerDir -ItemType Directory | Out-Null
 }
+
+if (Test-Path $WasmerInstaller) {
+  Remove-Item $WasmerInstaller
+}
+
+Write-Host "Downloading Wasmer..."
 
 Invoke-WebRequest $WasmerInstallerUri -OutFile $WasmerInstaller -UseBasicParsing
 
+Write-Output "Installing Wasmer..."
+
+Start-Process $WasmerInstaller -Wait -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$WasmerDir`" /SP-"
 Remove-Item $WasmerInstaller
+
+Write-Output "Adding Wasmer to ENV:Path $WasmerBinDir..."
 
 $User = [EnvironmentVariableTarget]::User
 $Path = [Environment]::GetEnvironmentVariable('Path', $User)
-if (!(";$Path;".ToLower() -like "*;$BinDir;*".ToLower())) {
-  [Environment]::SetEnvironmentVariable('Path', "$Path;$BinDir", $User)
-  $Env:Path += ";$BinDir"
+if (!(";$Path;".ToLower() -like "*;$WasmerBinDir;*".ToLower())) {
+  Write-Output "Adding Wasmer bin directory ($WasmerBinDir) to Environment path..."
+  [Environment]::SetEnvironmentVariable('Path', "$Path;$WasmerBinDir", $User)
+  $Env:Path += ";$WasmerBinDir"
 }
 
-Write-Output "Wasmer was installed successfully to $WasmerExe"
-Write-Output "Run 'wasmer --help' to get started"
+Write-Host "Wasmer installed" -ForegroundColor Green
+Write-Output "Run '$WasmerBinDir\wasmer --help' to get started"
