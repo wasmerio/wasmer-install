@@ -56,6 +56,14 @@ scoop install wasmer
 choco install wasmer
 ```
 
+**With [Cargo](https://crates.io/crates/wasmer-bin/):**
+
+**Wasmer will be soon available in Cargo, stay tuned!**
+
+```sh
+cargo install wasmer-bin # add --features=llvm for LLVM compilation support
+```
+
 ## Environment Variables
 
 - `WASMER_DIR` - The directory in which to install Wasmer. This defaults to
