@@ -42,7 +42,7 @@ brew install wasmer
 
 **With [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/wasmer.json):**
 
-**Wasmer is not yet available in Scoop, would you like to give us a hand? 🤗**
+**Wasmer is not yet available in Scoop, would you like to give us a hand? 🤗 [PR in progress](https://github.com/ScoopInstaller/Main/pull/1237)**
 
 ```powershell
 scoop install wasmer
