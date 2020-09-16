@@ -285,26 +285,25 @@ semver_compare() {
   semverParseInto $1 MAJOR_A MINOR_A PATCH_A SPECIAL_A
   semverParseInto $2 MAJOR_B MINOR_B PATCH_B SPECIAL_B
 
-
   # Check if our version is higher
   if [ $MAJOR_A -gt $MAJOR_B ]; then
-      echo 1 && return 0
+    echo 1 && return 0
   fi
   if [ $MAJOR_A -eq $MAJOR_B ]; then
-      if [ $MINOR_A -gt $MINOR_B ]; then
+    if [ $MINOR_A -gt $MINOR_B ]; then
+      echo 1 && return 0
+    elif [ $MINOR_A -eq $MINOR_B ]; then
+      if [ $PATCH_A -gt $PATCH_B ]; then
+        echo 1 && return 0
+      elif [ $PATCH_A -eq $PATCH_B ]; then
+        if [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
           echo 1 && return 0
-      elif [ $MINOR_A -eq $MINOR_B ]; then
-          if [ $PATCH_A -gt $PATCH_B ]; then
-              echo 1 && return 0
-          elif [ $PATCH_A -eq $PATCH_B ]; then
-              if [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
-                  echo 1 && return 0
-              elif [ "$SPECIAL_A" = "$SPECIAL_B" ]; then
-                  # complete match
-                  echo 0 && return 0
-              fi
-          fi
+        elif [ "$SPECIAL_A" = "$SPECIAL_B" ]; then
+          # complete match
+          echo 0 && return 0
+        fi
       fi
+    fi
   fi
 
   # if we're here we know that the target verison cannot be less than or equal to
