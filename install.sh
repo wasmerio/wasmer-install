@@ -251,8 +251,8 @@ version() {
 semverParseInto() {
   local RE='\([0-9]*\)[.]\([0-9]*\)[.]\([0-9]*\)\([0-9A-Za-z-]*\)'
 
-  # # strip word "v" if exists
-  # version=$(echo "${1//v/}")
+  # strip word "v" if exists
+  version=$(echo "${1//v/}")
 
   #MAJOR
   eval $2=$(echo $version | sed -e "s#$RE#\1#")
