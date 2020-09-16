@@ -452,11 +452,24 @@ wasmer_warning() {
 }
 
 wasmer_verify_or_quit() {
-  read -p "$1 [y/N] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    wasmer_error "installation aborted"
+  if [ -n "$BASH_VERSION" ]; then
+    # If we are in bash, we can use read -n
+    read -p "$1 [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      wasmer_error "installation aborted"
+    fi
+    return 0
   fi
+
+  read -p "$1 [y/N]" yn
+  case $yn in
+  [Yy]*) break ;;
+  [Nn]*) wasmer_error "installation aborted" ;;
+  *) echo "Please answer yes or no." ;;
+  esac
+
+  return
 }
 
 # determine install directory if required
