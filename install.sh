@@ -299,7 +299,7 @@ semver_compare() {
   cursor=0
   # Iterate arrays from left to right and find the first difference
   while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]; do
-    cursor=$((cursor+1))
+    cursor=$((cursor + 1))
   done
   [ "${arr_version_a[$cursor]}" -gt "${arr_version_b[$cursor]}" ] && echo 1 || echo -1
 }
