@@ -24,7 +24,7 @@ unset WASMER_DIR
 ~/.wasmer/bin/wasmer --version | grep 0.17.0
 
 unset WASMER_DIR
-./install.sh 0.16.0
+./install.sh 0.16.0 || true
 ~/.wasmer/bin/wasmer --version | grep 0.17.0
 
 unset WASMER_DIR
@@ -36,5 +36,5 @@ unset WASMER_DIR
 ~/.wasmer/bin/wasmer --version | grep 1.0.0-alpha3
 
 unset WASMER_DIR
-./install.sh 0.17.0
+./install.sh 0.17.0 || true
 ~/.wasmer/bin/wasmer --version | grep 1.0.0-alpha3
