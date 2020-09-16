@@ -251,7 +251,7 @@ version() {
 ###
 # Code taken with attributions from:
 # https://gist.github.com/Ariel-Rodriguez/9e3c2163f4644d7a389759b224bfe7f3
-# 
+#
 # Author Ariel Rodriguez
 # License MIT
 ###
@@ -261,8 +261,7 @@ semver_compare() {
   version_a=$(echo "${1//v/}" | awk -F'-' '{print $1}')
   version_b=$(echo "${2//v/}" | awk -F'-' '{print $1}')
 
-  if [ "$version_a" \= "$version_b" ]
-  then
+  if [ "$version_a" \= "$version_b" ]; then
     # check for pre-release
     # extract pre-release (-foo.n from x.y.z-foo.n)
     pr_a=$(echo "$1" | awk -F'-' '{print $2}')
@@ -276,8 +275,7 @@ semver_compare() {
     # Return 1
 
     # Case when A is not pre-release
-    if [ -z "$pr_a" ]
-    then
+    if [ -z "$pr_a" ]; then
       echo 1 && return 0
     fi
 
@@ -296,12 +294,11 @@ semver_compare() {
     # Retrun -1 when A is lower than B
     echo -1 && return 0
   fi
-  arr_version_a="${version_a//./ }"
-  arr_version_b="${version_b//./ }"
+  arr_version_a=(${version_a//./ })
+  arr_version_b=(${version_b//./ })
   cursor=0
   # Iterate arrays from left to right and find the first difference
-  while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]
-  do
+  while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]; do
     cursor=$((cursor+1))
   done
   [ "${arr_version_a[$cursor]}" -gt "${arr_version_b[$cursor]}" ] && echo 1 || echo -1
