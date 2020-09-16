@@ -251,8 +251,8 @@ version() {
 semverParseInto() {
   local RE='\([0-9]*\)[.]\([0-9]*\)[.]\([0-9]*\)\([0-9A-Za-z-]*\)'
 
-  # strip word "v" if exists
-  version=$(echo "${1//v/}")
+  # # strip word "v" if exists
+  # version=$(echo "${1//v/}")
 
   #MAJOR
   eval $2=$(echo $version | sed -e "s#$RE#\1#")
@@ -376,16 +376,16 @@ wasmer_download() {
     WASMER_VERSION=$($INSTALL_DIRECTORY/bin/wasmer --version | sed 's/wasmer //g')
     printf "Wasmer already installed in ${INSTALL_DIRECTORY} with version: ${WASMER_VERSION}\n"
 
-    # MAJOR=0
-    # MINOR=0
-    # PATCH=0
-    # SPECIAL=""
+    MAJOR=0
+    MINOR=0
+    PATCH=0
+    SPECIAL=""
 
-    # semverParseInto $WASMER_VERSION MAJOR MINOR PATCH SPECIAL
-    # echo "$WASMER_VERSION -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
+    semverParseInto $WASMER_VERSION MAJOR MINOR PATCH SPECIAL
+    echo "$WASMER_VERSION -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
 
-    # semverParseInto $WASMER_RELEASE_TAG MAJOR MINOR PATCH SPECIAL
-    # echo "$WASMER_RELEASE_TAG -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
+    semverParseInto $WASMER_RELEASE_TAG MAJOR MINOR PATCH SPECIAL
+    echo "$WASMER_RELEASE_TAG -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
 
     WASMER_COMPARE=$(semver_compare $WASMER_VERSION $WASMER_RELEASE_TAG)
     printf "semver comparison: $WASMER_COMPARE\n"
