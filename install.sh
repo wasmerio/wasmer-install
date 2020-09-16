@@ -323,7 +323,7 @@ semver_compare() {
     echo -1 && return 0
   fi
 
-  if [ $MAJOR_A -le $MAJOR_B ] && [$MINOR_A -lt $MINOR_B ]; then
+  if [ $MAJOR_A -le $MAJOR_B ] && [ $MINOR_A -lt $MINOR_B ]; then
     echo -1 && return 0
   fi
 
