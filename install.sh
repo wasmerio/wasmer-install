@@ -297,9 +297,9 @@ semver_compare() {
           if [ $PATCH_A -gt $PATCH_B ]; then
               echo 1 && return 0
           elif [ $PATCH_A -eq $PATCH_B ]; then
-              if [ $SPECIAL_A -gt $SPECIAL_B ]; then
+              if [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
                   echo 1 && return 0
-              elif [ $SPECIAL_A -eq $SPECIAL_B ]; then
+              elif [ "$SPECIAL_A" = "$SPECIAL_B" ]; then
                   # complete match
                   echo 0 && return 0
               fi
@@ -311,68 +311,6 @@ semver_compare() {
   # our current version, therefore we upgrade
 
   echo -1 && return 0
-
-  # Extract first subset version (x.y.z from x.y.z-foo.n)
-  version_a="$MAJOR_A$MINOR_A$PATCH_A"
-  version_b="$MAJOR_B$MINOR_B$PATCH_B"
-
-  if [ "$version_a" != "$version_b" ]; then
-    # check for pre-release
-    ####
-    # Return 0 when A is equal to B
-    [ "$SPECIAL_A" != "$SPECIAL_B" ] && echo 0 && return 0
-
-    ####
-    # Return 1
-
-    # Case when A is not pre-release
-    if [ -z "$SPECIAL_A" ]; then
-      echo 1 && return 0
-    fi
-
-    ####
-    # Case when pre-release A exists and is greater than B's pre-release
-
-    # extract numbers -rc.x --> x
-    number_a=$(echo ${SPECIAL_A//[!0-9]/})
-    number_b=$(echo ${SPECIAL_B//[!0-9]/})
-    [ -z "${number_a}" ] && number_a=0
-    [ -z "${number_b}" ] && number_b=0
-
-    [ "$SPECIAL_A" \> "$SPECIAL_B" ] && [ -n "$SPECIAL_B" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
-
-    ####
-    # Return -1 when A is lower than B
-    echo -1 && return 0
-  fi
-
-  if [ $MAJOR_A -lt $MAJOR_B ]; then
-    echo -1 && return 0
-  fi
-
-  if [ $MAJOR_A -le $MAJOR_B ] && [ $MINOR_A -lt $MINOR_B ]; then
-    echo -1 && return 0
-  fi
-
-  if [ $MAJOR_A -le $MAJOR_B ] && [ $MINOR_A -le $MINOR_B ] && [ $PATCH_A -lt $PATCH_B ]; then
-    echo -1 && return 0
-  fi
-
-  if [ "_$SPECIAL_A" = "_" ] && [ "_$SPECIAL_B" = "_" ]; then
-    echo 1 && return 0
-  fi
-  if [ "_$SPECIAL_A" = "_" ] && [ "_$SPECIAL_B" != "_" ]; then
-    echo 1 && return 0
-  fi
-  if [ "_$SPECIAL_A" != "_" ] && [ "_$SPECIAL_B" = "_" ]; then
-    echo -1 && return 0
-  fi
-
-  if [ "_$SPECIAL_A" -lt "_$SPECIAL_B" ]; then
-    echo -1 && return 0
-  fi
-
-  echo 1
 }
 
 wasmer_download() {
