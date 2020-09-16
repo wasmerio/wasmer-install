@@ -248,34 +248,58 @@ version() {
   echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
 }
 
+semverParseInto() {
+  local RE='\([0-9]*\)[.]\([0-9]*\)[.]\([0-9]*\)\([0-9A-Za-z-]*\)'
+
+  # strip word "v" if exists
+  version=$(echo "${1//v/}")
+
+  #MAJOR
+  eval $2=$(echo $version | sed -e "s#$RE#\1#")
+  #MINOR
+  eval $3=$(echo $version | sed -e "s#$RE#\2#")
+  #MINOR
+  eval $4=$(echo $version | sed -e "s#$RE#\3#")
+  #SPECIAL
+  eval $5=$(echo $version | sed -e "s#$RE#\4#")
+}
+
 ###
-# Code taken with attributions from:
+# Code inspired (copied partially and improved) with attributions from:
+# https://github.com/cloudflare/semver_bash/blob/master/semver.sh
 # https://gist.github.com/Ariel-Rodriguez/9e3c2163f4644d7a389759b224bfe7f3
-#
-# Author Ariel Rodriguez
-# License MIT
 ###
 semver_compare() {
-  local version_a version_b pr_a pr_b
-  # strip word "v" and extract first subset version (x.y.z from x.y.z-foo.n)
-  version_a=$(echo "${1//v/}" | awk -F'-' '{print $1}')
-  version_b=$(echo "${2//v/}" | awk -F'-' '{print $1}')
+  local version_a version_b
+
+  local MAJOR_A=0
+  local MINOR_A=0
+  local PATCH_A=0
+  local SPECIAL_A=0
+
+  local MAJOR_B=0
+  local MINOR_B=0
+  local PATCH_B=0
+  local SPECIAL_B=0
+
+  semverParseInto $1 MAJOR_A MINOR_A PATCH_A SPECIAL_A
+  semverParseInto $2 MAJOR_B MINOR_B PATCH_B SPECIAL_B
+
+  # Extract first subset version (x.y.z from x.y.z-foo.n)
+  version_a="$MAJOR_A$MINOR_A$PATCH_A"
+  version_b="$MAJOR_B$MINOR_B$PATCH_B"
 
   if [ "$version_a" \= "$version_b" ]; then
     # check for pre-release
-    # extract pre-release (-foo.n from x.y.z-foo.n)
-    pr_a=$(echo "$1" | awk -F'-' '{print $2}')
-    pr_b=$(echo "$2" | awk -F'-' '{print $2}')
-
     ####
     # Return 0 when A is equal to B
-    [ "$pr_a" \= "$pr_b" ] && echo 0 && return 0
+    [ "$SPECIAL_A" \= "$SPECIAL_B" ] && echo 0 && return 0
 
     ####
     # Return 1
 
     # Case when A is not pre-release
-    if [ -z "$pr_a" ]; then
+    if [ -z "$SPECIAL_A" ]; then
       echo 1 && return 0
     fi
 
@@ -283,25 +307,45 @@ semver_compare() {
     # Case when pre-release A exists and is greater than B's pre-release
 
     # extract numbers -rc.x --> x
-    number_a=$(echo ${pr_a//[!0-9]/})
-    number_b=$(echo ${pr_b//[!0-9]/})
+    number_a=$(echo ${SPECIAL_A//[!0-9]/})
+    number_b=$(echo ${SPECIAL_B//[!0-9]/})
     [ -z "${number_a}" ] && number_a=0
     [ -z "${number_b}" ] && number_b=0
 
-    [ "$pr_a" \> "$pr_b" ] && [ -n "$pr_b" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
+    [ "$SPECIAL_A" \> "$SPECIAL_B" ] && [ -n "$SPECIAL_B" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
 
     ####
     # Retrun -1 when A is lower than B
     echo -1 && return 0
   fi
-  arr_version_a=(${version_a//./ })
-  arr_version_b=(${version_b//./ })
-  cursor=0
-  # Iterate arrays from left to right and find the first difference
-  while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]; do
-    cursor=$((cursor + 1))
-  done
-  [ "${arr_version_a[$cursor]}" -gt "${arr_version_b[$cursor]}" ] && echo 1 || echo -1
+
+  if [ $MAJOR_A -lt $MAJOR_B ]; then
+    echo -1 && return 0
+  fi
+
+  if [[ $MAJOR_A -le $MAJOR_B && $MINOR_A -lt $MINOR_B ]]; then
+    echo -1 && return 0
+  fi
+
+  if [[ $MAJOR_A -le $MAJOR_B && $MINOR_A -le $MINOR_B && $PATCH_A -lt $PATCH_B ]]; then
+    echo -1 && return 0
+  fi
+
+  if [[ "_$SPECIAL_A" == "_" ]] && [[ "_$SPECIAL_B" == "_" ]]; then
+    echo 1 && return 0
+  fi
+  if [[ "_$SPECIAL_A" == "_" ]] && [[ "_$SPECIAL_B" != "_" ]]; then
+    echo 1 && return 0
+  fi
+  if [[ "_$SPECIAL_A" != "_" ]] && [[ "_$SPECIAL_B" == "_" ]]; then
+    echo -1 && return 0
+  fi
+
+  if [[ "_$SPECIAL_A" < "_$SPECIAL_B" ]]; then
+    echo -1 && return 0
+  fi
+
+  echo 1
 }
 
 wasmer_download() {
@@ -331,8 +375,20 @@ wasmer_download() {
   if which wasmer >/dev/null; then
     WASMER_VERSION=$(wasmer --version | sed 's/wasmer //g')
     printf "Detected already installed Wasmer with version: ${WASMER_VERSION}\n"
+
+    # MAJOR=0
+    # MINOR=0
+    # PATCH=0
+    # SPECIAL=""
+
+    # semverParseInto $WASMER_VERSION MAJOR MINOR PATCH SPECIAL
+    # echo "$WASMER_VERSION -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
+
+    # semverParseInto $WASMER_RELEASE_TAG MAJOR MINOR PATCH SPECIAL
+    # echo "$WASMER_RELEASE_TAG -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
+
     WASMER_COMPARE=$(semver_compare $WASMER_VERSION $WASMER_RELEASE_TAG)
-    # printf "version: $WASMER_COMPARE\n"
+    printf "semver comparison: $WASMER_COMPARE\n"
     case $WASMER_COMPARE in
     # WASMER_VERSION = WASMER_RELEASE_TAG
     0)
