@@ -372,9 +372,9 @@ wasmer_download() {
     printf "Installing provided version: ${WASMER_RELEASE_TAG}\n"
   fi
 
-  if which wasmer >/dev/null; then
-    WASMER_VERSION=$(wasmer --version | sed 's/wasmer //g')
-    printf "Detected already installed Wasmer with version: ${WASMER_VERSION}\n"
+  if which $INSTALL_DIRECTORY/bin/wasmer >/dev/null; then
+    WASMER_VERSION=$($INSTALL_DIRECTORY/bin/wasmer --version | sed 's/wasmer //g')
+    printf "Wasmer already installed in ${INSTALL_DIRECTORY} with version: ${WASMER_VERSION}\n"
 
     # MAJOR=0
     # MINOR=0
