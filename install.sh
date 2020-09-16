@@ -340,19 +340,7 @@ wasmer_download() {
     WASMER_VERSION=$($INSTALL_DIRECTORY/bin/wasmer --version | sed 's/wasmer //g')
     printf "Wasmer already installed in ${INSTALL_DIRECTORY} with version: ${WASMER_VERSION}\n"
 
-    local MAJOR=0
-    local MINOR=0
-    local PATCH=0
-    local SPECIAL=""
-
-    semverParseInto $WASMER_VERSION MAJOR MINOR PATCH SPECIAL
-    echo "$WASMER_VERSION -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
-
-    semverParseInto $WASMER_RELEASE_TAG MAJOR MINOR PATCH SPECIAL
-    echo "$WASMER_RELEASE_TAG -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
-
     WASMER_COMPARE=$(semver_compare $WASMER_VERSION $WASMER_RELEASE_TAG)
-    printf "semver comparison: $WASMER_COMPARE\n"
     case $WASMER_COMPARE in
     # WASMER_VERSION = WASMER_RELEASE_TAG
     0)
