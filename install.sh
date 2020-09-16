@@ -23,7 +23,6 @@ reset="\033[0m"
 red="\033[31m"
 green="\033[32m"
 yellow="\033[33m"
-cyan="\033[36m"
 white="\033[37m"
 bold="\e[1m"
 dim="\e[2m"
@@ -297,8 +296,8 @@ semver_compare() {
     # Retrun -1 when A is lower than B
     echo -1 && return 0
   fi
-  arr_version_a=(${version_a//./ })
-  arr_version_b=(${version_b//./ })
+  arr_version_a="${version_a//./ }"
+  arr_version_b="${version_b//./ }"
   cursor=0
   # Iterate arrays from left to right and find the first difference
   while [ "$([ "${arr_version_a[$cursor]}" -eq "${arr_version_b[$cursor]}" ] && [ $cursor -lt ${#arr_version_a[@]} ] && echo true)" == true ]
