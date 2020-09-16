@@ -61,7 +61,7 @@ choco install wasmer
 **Wasmer will be soon available in Cargo, stay tuned!**
 
 ```sh
-cargo install wasmer-bin # add --features=llvm for LLVM compilation support
+cargo install wasmer-cli # add --features=llvm for LLVM compilation support
 ```
 
 ## Environment Variables
