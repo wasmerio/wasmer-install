@@ -289,11 +289,11 @@ semver_compare() {
   version_a="$MAJOR_A$MINOR_A$PATCH_A"
   version_b="$MAJOR_B$MINOR_B$PATCH_B"
 
-  if [ "$version_a" \= "$version_b" ]; then
+  if [ "$version_a" != "$version_b" ]; then
     # check for pre-release
     ####
     # Return 0 when A is equal to B
-    [ "$SPECIAL_A" \= "$SPECIAL_B" ] && echo 0 && return 0
+    [ "$SPECIAL_A" != "$SPECIAL_B" ] && echo 0 && return 0
 
     ####
     # Return 1
@@ -315,7 +315,7 @@ semver_compare() {
     [ "$SPECIAL_A" \> "$SPECIAL_B" ] && [ -n "$SPECIAL_B" ] && [ "$number_a" -gt "$number_b" ] && echo 1 && return 0
 
     ####
-    # Retrun -1 when A is lower than B
+    # Return -1 when A is lower than B
     echo -1 && return 0
   fi
 
