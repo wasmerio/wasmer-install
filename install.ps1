@@ -23,6 +23,14 @@ $WasmerBinDir = "$WasmerDir\bin"
 $WasmerExe = "$WasmerDir\bin\wasmer.exe"
 $Target = 'windows'
 
+$allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
+if ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
+    Write-Output "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run the Wasmer Installer."
+    Write-Output "For example, to set the execution policy to 'RemoteSigned' please run :"
+    Write-Output "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
+    break
+}
+
 # GitHub requires TLS 1.2
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
