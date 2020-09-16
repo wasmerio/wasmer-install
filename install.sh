@@ -331,13 +331,13 @@ semver_compare() {
     echo -1 && return 0
   fi
 
-  if [ "_$SPECIAL_A" == "_" ] && [ "_$SPECIAL_B" == "_" ]; then
+  if [ "_$SPECIAL_A" -eq "_" ] && [ "_$SPECIAL_B" -eq "_" ]; then
     echo 1 && return 0
   fi
-  if [ "_$SPECIAL_A" == "_" ] && [ "_$SPECIAL_B" != "_" ]; then
+  if [ "_$SPECIAL_A" -eq "_" ] && [ "_$SPECIAL_B" -ne "_" ]; then
     echo 1 && return 0
   fi
-  if [ "_$SPECIAL_A" != "_" ] && [ "_$SPECIAL_B" == "_" ]; then
+  if [ "_$SPECIAL_A" -ne "_" ] && [ "_$SPECIAL_B" -eq "_" ]; then
     echo -1 && return 0
   fi
 
