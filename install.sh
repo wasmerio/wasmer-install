@@ -312,25 +312,6 @@ semver_compare() {
 
   echo -1 && return 0
 
-
-  if [ $MAJOR_A -eq $MAJOR_B ]; then
-      if [ $MINOR_A -eq $MINOR_B ]; then
-          if [ $PATCH_A -eq $PATCH_B ]; then
-              if [ $SPECIAL_A -eq $SPECIAL_B ]; then
-                  # complete match
-                  echo 0 && return 0
-              fi
-          fi
-      fi
-  elif [ $MAJOR_A -lt $MAJOR_B ]; then
-  else # $MAJOR_A -gt $MAJOR_B
-
-  fi
-  # Check if the versions are equal
-  if [ $MAJOR_A -eq $MAJOR_B ] && [ $MINOR_A -eq $MINOR_B ] && [ $PATCH_A -eq $PATCH_B ] && [ $SPECIAL_A -eq SPECIAL_B ]; then
-      echo 0 && return 0
-  fi
-
   # Extract first subset version (x.y.z from x.y.z-foo.n)
   version_a="$MAJOR_A$MINOR_A$PATCH_A"
   version_b="$MAJOR_B$MINOR_B$PATCH_B"
