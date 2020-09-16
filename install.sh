@@ -323,25 +323,25 @@ semver_compare() {
     echo -1 && return 0
   fi
 
-  if [[ $MAJOR_A -le $MAJOR_B && $MINOR_A -lt $MINOR_B ]]; then
+  if [ $MAJOR_A -le $MAJOR_B ] && [$MINOR_A -lt $MINOR_B ]; then
     echo -1 && return 0
   fi
 
-  if [[ $MAJOR_A -le $MAJOR_B && $MINOR_A -le $MINOR_B && $PATCH_A -lt $PATCH_B ]]; then
+  if [ $MAJOR_A -le $MAJOR_B ] && [ $MINOR_A -le $MINOR_B ] && [ $PATCH_A -lt $PATCH_B ]; then
     echo -1 && return 0
   fi
 
-  if [[ "_$SPECIAL_A" == "_" ]] && [[ "_$SPECIAL_B" == "_" ]]; then
+  if [ "_$SPECIAL_A" == "_" ] && [ "_$SPECIAL_B" == "_" ]; then
     echo 1 && return 0
   fi
-  if [[ "_$SPECIAL_A" == "_" ]] && [[ "_$SPECIAL_B" != "_" ]]; then
+  if [ "_$SPECIAL_A" == "_" ] && [ "_$SPECIAL_B" != "_" ]; then
     echo 1 && return 0
   fi
-  if [[ "_$SPECIAL_A" != "_" ]] && [[ "_$SPECIAL_B" == "_" ]]; then
+  if [ "_$SPECIAL_A" != "_" ] && [ "_$SPECIAL_B" == "_" ]; then
     echo -1 && return 0
   fi
 
-  if [[ "_$SPECIAL_A" < "_$SPECIAL_B" ]]; then
+  if [ "_$SPECIAL_A" -lt "_$SPECIAL_B" ]; then
     echo -1 && return 0
   fi
 
