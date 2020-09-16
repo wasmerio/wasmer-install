@@ -31,9 +31,10 @@ unset WASMER_DIR
 ./install.sh 0.17.1
 ~/.wasmer/bin/wasmer --version | grep 0.17.1
 
-unset WASMER_DIR
-./install.sh 1.0.0-alpha02.0
-~/.wasmer/bin/wasmer --version | grep 1.0.0-alpha02.0
+# Re enable this test when we have multiple tagged versions to test against...
+#unset WASMER_DIR
+#./install.sh 1.0.0-alpha02.0
+#~/.wasmer/bin/wasmer --version | grep 1.0.0-alpha02.0
 
 unset WASMER_DIR
 ./install.sh 1.0.0-alpha3
