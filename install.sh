@@ -249,19 +249,19 @@ version() {
 }
 
 semverParseInto() {
-  local RE='\([0-9]*\)[.]\([0-9]*\)[.]\([0-9]*\)\([0-9A-Za-z-]*\)'
+  local RE='([0-9]+)[.]([0-9]+)[.]([0-9]+)([.0-9A-Za-z-]*)'
 
   # # strip word "v" if exists
   # version=$(echo "${1//v/}")
 
   #MAJOR
-  eval $2=$(echo $1 | sed -e "s#$RE#\1#")
+  eval $2=$(echo $1 | sed -E "s#$RE#\1#")
   #MINOR
-  eval $3=$(echo $1 | sed -e "s#$RE#\2#")
+  eval $3=$(echo $1 | sed -E "s#$RE#\2#")
   #MINOR
-  eval $4=$(echo $1 | sed -e "s#$RE#\3#")
+  eval $4=$(echo $1 | sed -E "s#$RE#\3#")
   #SPECIAL
-  eval $5=$(echo $1 | sed -e "s#$RE#\4#")
+  eval $5=$(echo $1 | sed -E "s#$RE#\4#")
 }
 
 ###
@@ -376,10 +376,10 @@ wasmer_download() {
     WASMER_VERSION=$($INSTALL_DIRECTORY/bin/wasmer --version | sed 's/wasmer //g')
     printf "Wasmer already installed in ${INSTALL_DIRECTORY} with version: ${WASMER_VERSION}\n"
 
-    MAJOR=0
-    MINOR=0
-    PATCH=0
-    SPECIAL=""
+    local MAJOR=0
+    local MINOR=0
+    local PATCH=0
+    local SPECIAL=""
 
     semverParseInto $WASMER_VERSION MAJOR MINOR PATCH SPECIAL
     echo "$WASMER_VERSION -> M: $MAJOR m:$MINOR p:$PATCH s:$SPECIAL"
