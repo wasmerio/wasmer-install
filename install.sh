@@ -23,7 +23,6 @@ reset="\033[0m"
 red="\033[31m"
 green="\033[32m"
 yellow="\033[33m"
-cyan="\033[36m"
 white="\033[37m"
 bold="\e[1m"
 dim="\e[2m"
@@ -242,24 +241,75 @@ ${reset}
 }
 
 wasmer_reset() {
-  unset -f wasmer_install wasmer_compareversions wasmer_reset wasmer_download_json wasmer_link wasmer_detect_profile wasmer_download_file wasmer_download wasmer_verify_or_quit
+  unset -f wasmer_install semver_compare wasmer_reset wasmer_download_json wasmer_link wasmer_detect_profile wasmer_download_file wasmer_download wasmer_verify_or_quit
 }
 
 version() {
   echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'
 }
 
-# TODO: Does not support versions with characters in them yet. Won't work for wasmer_compareversions "1.4.5-rc4" "1.4.5-r5"
-wasmer_compareversions() {
-  WASMER_VERSION=$(version $1)
-  WASMER_COMPARE=$(version $2)
-  if [ $WASMER_VERSION = $WASMER_COMPARE ]; then
-    echo "="
-  elif [ $WASMER_VERSION -gt $WASMER_COMPARE ]; then
-    echo ">"
-  elif [ $WASMER_VERSION -lt $WASMER_COMPARE ]; then
-    echo "<"
+semverParseInto() {
+  local RE='([0-9]+)[.]([0-9]+)[.]([0-9]+)([.0-9A-Za-z-]*)'
+
+  # # strip word "v" if exists
+  # version=$(echo "${1//v/}")
+
+  #MAJOR
+  eval $2=$(echo $1 | sed -E "s#$RE#\1#")
+  #MINOR
+  eval $3=$(echo $1 | sed -E "s#$RE#\2#")
+  #MINOR
+  eval $4=$(echo $1 | sed -E "s#$RE#\3#")
+  #SPECIAL
+  eval $5=$(echo $1 | sed -E "s#$RE#\4#")
+}
+
+###
+# Code inspired (copied partially and improved) with attributions from:
+# https://github.com/cloudflare/semver_bash/blob/master/semver.sh
+# https://gist.github.com/Ariel-Rodriguez/9e3c2163f4644d7a389759b224bfe7f3
+###
+semver_compare() {
+  local version_a version_b
+
+  local MAJOR_A=0
+  local MINOR_A=0
+  local PATCH_A=0
+  local SPECIAL_A=0
+
+  local MAJOR_B=0
+  local MINOR_B=0
+  local PATCH_B=0
+  local SPECIAL_B=0
+
+  semverParseInto $1 MAJOR_A MINOR_A PATCH_A SPECIAL_A
+  semverParseInto $2 MAJOR_B MINOR_B PATCH_B SPECIAL_B
+
+  # Check if our version is higher
+  if [ $MAJOR_A -gt $MAJOR_B ]; then
+    echo 1 && return 0
   fi
+  if [ $MAJOR_A -eq $MAJOR_B ]; then
+    if [ $MINOR_A -gt $MINOR_B ]; then
+      echo 1 && return 0
+    elif [ $MINOR_A -eq $MINOR_B ]; then
+      if [ $PATCH_A -gt $PATCH_B ]; then
+        echo 1 && return 0
+      elif [ $PATCH_A -eq $PATCH_B ]; then
+        if [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
+          echo 1 && return 0
+        elif [ "$SPECIAL_A" = "$SPECIAL_B" ]; then
+          # complete match
+          echo 0 && return 0
+        fi
+      fi
+    fi
+  fi
+
+  # if we're here we know that the target verison cannot be less than or equal to
+  # our current version, therefore we upgrade
+
+  echo -1 && return 0
 }
 
 wasmer_download() {
@@ -283,16 +333,17 @@ wasmer_download() {
     printf "Latest release: ${WASMER_RELEASE_TAG}\n"
   else
     WASMER_RELEASE_TAG="${1}"
-    printf "Using provided version: ${WASMER_RELEASE_TAG}\n"
+    printf "Installing provided version: ${WASMER_RELEASE_TAG}\n"
   fi
 
-  if which wasmer >/dev/null; then
-    WASMER_VERSION=$(wasmer --version | sed 's/[a-z[:blank:]]//g')
-    WASMER_COMPARE=$(wasmer_compareversions $WASMER_VERSION $WASMER_RELEASE_TAG)
-    # printf "version: $WASMER_COMPARE\n"
+  if which $INSTALL_DIRECTORY/bin/wasmer >/dev/null; then
+    WASMER_VERSION=$($INSTALL_DIRECTORY/bin/wasmer --version | sed 's/wasmer //g')
+    printf "Wasmer already installed in ${INSTALL_DIRECTORY} with version: ${WASMER_VERSION}\n"
+
+    WASMER_COMPARE=$(semver_compare $WASMER_VERSION $WASMER_RELEASE_TAG)
     case $WASMER_COMPARE in
     # WASMER_VERSION = WASMER_RELEASE_TAG
-    "=")
+    0)
       if [ $# -eq 0 ]; then
         wasmer_warning "wasmer is already installed in the latest version: ${WASMER_RELEASE_TAG}"
       else
@@ -302,13 +353,13 @@ wasmer_download() {
       wasmer_verify_or_quit
       ;;
       # WASMER_VERSION > WASMER_RELEASE_TAG
-    ">")
+    1)
       wasmer_warning "the selected version (${WASMER_RELEASE_TAG}) is lower than current installed version ($WASMER_VERSION)"
       printf "Do you want to continue installing Wasmer $WASMER_RELEASE_TAG?"
       wasmer_verify_or_quit
       ;;
       # WASMER_VERSION < WASMER_RELEASE_TAG (we continue)
-    "<") ;;
+    -1) ;;
     esac
   fi
 
@@ -353,11 +404,24 @@ wasmer_warning() {
 }
 
 wasmer_verify_or_quit() {
-  read -p "$1 [y/N] " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    wasmer_error "installation aborted"
+  if [ -n "$BASH_VERSION" ]; then
+    # If we are in bash, we can use read -n
+    read -p "$1 [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+      wasmer_error "installation aborted"
+    fi
+    return 0
   fi
+
+  read -p "$1 [y/N]" yn
+  case $yn in
+  [Yy]*) break ;;
+  [Nn]*) wasmer_error "installation aborted" ;;
+  *) echo "Please answer yes or no." ;;
+  esac
+
+  return
 }
 
 # determine install directory if required
