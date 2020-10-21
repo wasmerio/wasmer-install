@@ -163,7 +163,7 @@ wasmer_link() {
       wasmer_error "wasmer was installed, but doesn't seem to be working :("
     )
 
-    wasmer_install_status "check" "$version installed succesfully ✓"
+    wasmer_install_status "check" "$version installed successfully ✓"
 
     if [ "$WASMER_INSTALL_LOG" = "$WASMER_VERBOSE" ]; then
       if [ "$wasmer_fresh_install" = true ]; then
