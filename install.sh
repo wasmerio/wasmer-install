@@ -176,13 +176,13 @@ wasmer_link() {
 
 initArch() {
   ARCH=$(uname -m)
-  # If you modify this list, please also modify scripts/binary-name.sh
   case $ARCH in
   amd64) ARCH="amd64" ;;
   x86_64) ARCH="amd64" ;;
   aarch64) ARCH="arm64" ;;
+  arm64) ARCH="arm64" ;;
   *)
-    wasmer_error "The system architecture (${ARCH}) is not supported by this installation script."
+    wasmer_error "The system architecture (${ARCH}) is not yet supported by this installation script."
     ;;
   esac
   # echo "ARCH = $ARCH"
