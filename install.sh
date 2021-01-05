@@ -296,7 +296,11 @@ semver_compare() {
       if [ $PATCH_A -gt $PATCH_B ]; then
         echo 1 && return 0
       elif [ $PATCH_A -eq $PATCH_B ]; then
-        if [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
+        if [ -n "$SPECIAL_A" ] && [ -z "$SPECIAL_B" ]; then
+          # if the version we're targeting does not have a tag and our current
+          # version does, we should upgrade because no tag > tag
+          echo -1 && return 0
+        elif [ "$SPECIAL_A" \> "$SPECIAL_B" ]; then
           echo 1 && return 0
         elif [ "$SPECIAL_A" = "$SPECIAL_B" ]; then
           # complete match
