@@ -58,10 +58,9 @@ choco install wasmer
 
 **With [Cargo](https://crates.io/crates/wasmer-bin/):**
 
-**Wasmer will be soon available in Cargo, stay tuned!**
 
 ```sh
-cargo install wasmer-cli # add --features=llvm for LLVM compilation support
+cargo install wasmer-cli --features singlepass,cranelift # add --features=llvm for LLVM compilation support
 ```
 
 ## Environment Variables
