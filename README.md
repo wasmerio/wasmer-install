@@ -54,7 +54,7 @@ scoop install wasmer
 choco install wasmer
 ```
 
-**With [Cargo](https://crates.io/crates/wasmer-bin/):**
+**With [Cargo](https://crates.io/crates/wasmer-cli/):**
 
 
 ```sh
