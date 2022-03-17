@@ -23,7 +23,7 @@ iwr https://win.wasmer.io -useb | iex
 **With Shell:**
 
 ```sh
-curl https://get.wasmer.io -sSfL | sh -s 2.1.0
+curl https://get.wasmer.io -sSfL | sh -s "2.2.1"
 ```
 
 **With PowerShell:**
