@@ -17,8 +17,6 @@
 #  3) https://yarnpkg.com/install.sh
 #  4) https://raw.githubusercontent.com/brainsik/virtualenv-burrito/master/virtualenv-burrito.sh
 
-set -e
-
 reset="\033[0m"
 red="\033[31m"
 green="\033[32m"
@@ -28,6 +26,7 @@ bold="\e[1m"
 dim="\e[2m"
 
 RELEASES_URL="https://github.com/wasmerio/wasmer/releases"
+WAPM_RELEASES_URL="https://github.com/wasmerio/wapm-cli/releases"
 
 WASMER_VERBOSE="verbose"
 if [ -z "$WASMER_INSTALL_LOG" ]; then
@@ -49,12 +48,15 @@ wasmer_download_json() {
     rm "$temp"
   else
     wasmer_error "Neither curl nor wget was available to perform http requests"
+    return 1
   fi
   if [ "$code" != 200 ]; then
     wasmer_error "File download failed with code $code"
+    return 1
   fi
 
   eval "$1='$body'"
+  return 0
 }
 
 wasmer_download_file() {
@@ -78,13 +80,17 @@ wasmer_download_file() {
     fi
   else
     wasmer_error "Neither curl nor wget was available to perform http requests."
+    return 1
   fi
 
   if [ "$code" = 404 ]; then
     wasmer_error "Your platform is not yet supported ($OS-$ARCH).$reset\nPlease open an issue on the project if you would like to use wasmer in your project: https://github.com/wasmerio/wasmer"
+    return 1
   elif [ "$code" != 200 ]; then
     wasmer_error "File download failed with code $code"
+    return 1
   fi
+  return 0
 }
 
 wasmer_detect_profile() {
@@ -141,6 +147,7 @@ wasmer_link() {
 
   if [ -z "${WASMER_PROFILE-}" ]; then
     wasmer_error "Profile not found. Tried:\n* ${WASMER_PROFILE} (as defined in \$PROFILE)\n* ~/.bashrc\n* ~/.bash_profile\n* ~/.zshrc\n* ~/.profile.\n${reset}Append the following lines to the correct file yourself:\n${SOURCE_STR}"
+    return 1
   else
     printf "Updating bash profile $WASMER_PROFILE\n"
     if ! grep -q 'wasmer.sh' "$WASMER_PROFILE"; then
@@ -161,6 +168,7 @@ wasmer_link() {
 
     version=$($INSTALL_DIRECTORY/bin/wasmer --version) || (
       wasmer_error "wasmer was installed, but doesn't seem to be working :("
+      return 1
     )
 
     wasmer_install_status "check" "$version installed successfully ✓"
@@ -172,6 +180,7 @@ wasmer_link() {
       fi
     fi
   fi
+  return 0
 }
 
 initArch() {
@@ -183,6 +192,7 @@ initArch() {
   arm64) ARCH="arm64" ;; # This is for the macOS M1 ARM chips
   *)
     wasmer_error "The system architecture (${ARCH}) is not yet supported by this installation script."
+    exit 1
     ;;
   esac
   # echo "ARCH = $ARCH"
@@ -235,8 +245,8 @@ ${reset}
     fi
   fi
 
-  wasmer_download $1 # $2
-  wasmer_link
+  wasmer_download $1 && wasmer_link
+  wapm_download
   wasmer_reset
 }
 
@@ -318,8 +328,8 @@ semver_compare() {
 
 wasmer_download() {
   # identify platform based on uname output
-  initArch
-  initOS
+  initArch || return 1
+  initOS || return 1
 
   # assemble expected release artifact name
   BINARY="wasmer-${OS}-${ARCH}.tar.gz"
@@ -332,7 +342,7 @@ wasmer_download() {
   wasmer_install_status "downloading" "wasmer-$OS-$ARCH"
   if [ $# -eq 0 ]; then
     # The version was not provided, assume latest
-    wasmer_download_json LATEST_RELEASE "$RELEASES_URL/latest"
+    wasmer_download_json LATEST_RELEASE "$RELEASES_URL/latest" || return 1
     WASMER_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//')
     printf "Latest release: ${WASMER_RELEASE_TAG}\n"
   else
@@ -354,13 +364,13 @@ wasmer_download() {
         wasmer_warning "wasmer is already installed with the same version: ${WASMER_RELEASE_TAG}"
       fi
       printf "Do you want to force the installation?"
-      wasmer_verify_or_quit
+      wasmer_verify_or_quit || return 1
       ;;
       # WASMER_VERSION > WASMER_RELEASE_TAG
     1)
       wasmer_warning "the selected version (${WASMER_RELEASE_TAG}) is lower than current installed version ($WASMER_VERSION)"
       printf "Do you want to continue installing Wasmer $WASMER_RELEASE_TAG?"
-      wasmer_verify_or_quit
+      wasmer_verify_or_quit || return 1
       ;;
       # WASMER_VERSION < WASMER_RELEASE_TAG (we continue)
     -1) ;;
@@ -368,14 +378,14 @@ wasmer_download() {
   fi
 
   # fetch the real release data to make sure it exists before we attempt a download
-  wasmer_download_json RELEASE_DATA "$RELEASES_URL/tag/$WASMER_RELEASE_TAG"
+  wasmer_download_json RELEASE_DATA "$RELEASES_URL/tag/$WASMER_RELEASE_TAG" || return 1
 
   BINARY_URL="$RELEASES_URL/download/$WASMER_RELEASE_TAG/$BINARY"
   DOWNLOAD_FILE=$(mktemp -t wasmer.XXXXXXXXXX)
 
   printf "Downloading archive from ${BINARY_URL}\n"
 
-  wasmer_download_file "$BINARY_URL" "$DOWNLOAD_FILE"
+  wasmer_download_file "$BINARY_URL" "$DOWNLOAD_FILE" || return 1
   # echo -en "\b\b"
   printf "\033[K\n\033[1A"
 
@@ -392,11 +402,76 @@ wasmer_download() {
 
   # Untar the wasmer contents in the install directory
   tar -C $INSTALL_DIRECTORY -zxf $DOWNLOAD_FILE
+  return 0
+}
+
+wapm_download() {
+  # identify platform based on uname output
+  initArch || return 1
+  initOS || return 1
+
+  if [ "$ARCH" = "arm64" ]; then
+    ARCH="aarch64"
+  fi
+
+  # assemble expected release artifact name
+  BINARY="wapm-cli-${OS}-${ARCH}.tar.gz"
+
+  wasmer_install_status "downloading" "wapm-cli-$OS-$ARCH"
+  # Download latest wapm version
+  wasmer_download_json LATEST_RELEASE "$WAPM_RELEASES_URL/latest" || return 1
+  WAPM_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//' | sed 's/v//g')
+  printf "Latest release: ${WAPM_RELEASE_TAG}\n"
+
+  if which $INSTALL_DIRECTORY/bin/wapm >/dev/null; then
+    WAPM_VERSION=$($INSTALL_DIRECTORY/bin/wapm --version | sed 's/wapm-cli //g')
+    printf "WAPM already installed in ${INSTALL_DIRECTORY} with version: ${WAPM_VERSION}\n"
+
+    WAPM_COMPARE=$(semver_compare $WAPM_VERSION $WAPM_RELEASE_TAG)
+    case $WAPM_COMPARE in
+    # WAPM_VERSION = WAPM_RELEASE_TAG
+    0)
+      if [ $# -eq 0 ]; then
+        wasmer_warning "WAPM is already installed in the latest version: ${WAPM_RELEASE_TAG}"
+      else
+        wasmer_warning "WAPM is already installed with the same version: ${WAPM_RELEASE_TAG}"
+      fi
+      printf "Do you want to force the installation?"
+      wasmer_verify_or_quit || return 1
+      ;;
+      # WAPM_VERSION > WAPM_RELEASE_TAG
+    1)
+      wasmer_warning "the selected version (${WAPM_RELEASE_TAG}) is lower than current installed version ($WAPM_VERSION)"
+      printf "Do you want to continue installing WAPM $WAPM_RELEASE_TAG?"
+      wasmer_verify_or_quit || return 1
+      ;;
+      # WAPM_VERSION < WAPM_RELEASE_TAG (we continue)
+    -1) ;;
+    esac
+  fi
+
+  # fetch the real release data to make sure it exists before we attempt a download
+  wasmer_download_json RELEASE_DATA "$WAPM_RELEASES_URL/tag/v$WAPM_RELEASE_TAG" || return 1
+
+  BINARY_URL="$WAPM_RELEASES_URL/download/v$WAPM_RELEASE_TAG/$BINARY"
+  DOWNLOAD_FILE=$(mktemp -t wapm.XXXXXXXXXX)
+
+  printf "Downloading archive from ${BINARY_URL}\n"
+
+  wasmer_download_file "$BINARY_URL" "$DOWNLOAD_FILE" || return 1
+
+  printf "\033[K\n\033[1A"
+
+  wasmer_install_status "installing" "${INSTALL_DIRECTORY}"
+
+  mkdir -p $INSTALL_DIRECTORY
+
+  # Untar the WAPM contents in the install directory
+  tar -C $INSTALL_DIRECTORY -zxf $DOWNLOAD_FILE
 }
 
 wasmer_error() {
   printf "$bold${red}error${white}: $1${reset}\n"
-  exit 1
 }
 
 wasmer_install_status() {
@@ -414,6 +489,7 @@ wasmer_verify_or_quit() {
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
       wasmer_error "installation aborted"
+      return 1
     fi
     return 0
   fi
@@ -421,11 +497,14 @@ wasmer_verify_or_quit() {
   read -p "$1 [y/N]" yn
   case $yn in
   [Yy]*) break ;;
-  [Nn]*) wasmer_error "installation aborted" ;;
+  [Nn]*)
+    wasmer_error "installation aborted"
+    return 1
+    ;;
   *) echo "Please answer yes or no." ;;
   esac
 
-  return
+  return 0
 }
 
 # determine install directory if required
