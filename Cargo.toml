@@ -1,0 +1,21 @@
+[package]
+name = "wasmer-install"
+version = "0.1.0"
+edition = "2021"
+license-file = "LICENCE"
+
+[dependencies]
+http_req  = {version="^0.8", default-features = false, features = ["rust-tls"]}
+dirs = "4.0"
+log = { version = "0.4", optional = true }
+serde_json = "1.0"
+anyhow = "1.0"
+tempfile = "3.3.0"
+
+[profile.release]
+opt-level = "z"
+strip = "symbols"
+debug = false
+debug-assertions = false
+overflow-checks = false
+lto = true
