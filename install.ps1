@@ -20,41 +20,27 @@ $WasmerDir = if ($WasmerInstall) {
 
 $WasmerInstaller = "$Home\temp-wasmer-installer.exe"
 $WasmerBinDir = "$WasmerDir\bin"
-$WasmerExe = "$WasmerDir\bin\wasmer.exe"
 $Target = 'windows'
 
 $allowedExecutionPolicy = @('Unrestricted', 'RemoteSigned', 'ByPass')
 if ((Get-ExecutionPolicy).ToString() -notin $allowedExecutionPolicy) {
-    Write-Output "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run the Wasmer Installer."
-    Write-Output "For example, to set the execution policy to 'RemoteSigned' please run :"
-    Write-Output "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
-    break
+  Write-Output "PowerShell requires an execution policy in [$($allowedExecutionPolicy -join ", ")] to run the Wasmer Installer."
+  Write-Output "For example, to set the execution policy to 'RemoteSigned' please run :"
+  Write-Output "'Set-ExecutionPolicy RemoteSigned -scope CurrentUser'"
+  break
 }
 
 # GitHub requires TLS 1.2
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 $WasmerInstallerUri = if (!$Version) {
-  Write-Host "Fetching lastest release..."
-  $Response = Invoke-WebRequest 'https://github.com/wasmerio/wasmer/releases' -UseBasicParsing
-  if ($PSVersionTable.PSEdition -eq 'Core') {
-    $Response.Links |
-      Where-Object { $_.href -like "/wasmerio/wasmer/releases/download/*/wasmer-${Target}.exe" } |
-      ForEach-Object { 'https://github.com' + $_.href } |
-      Select-Object -First 1
-  } else {
-    $HTMLFile = New-Object -Com HTMLFile
-    if ($HTMLFile.IHTMLDocument2_write) {
-      $HTMLFile.IHTMLDocument2_write($Response.Content)
-    } else {
-      $ResponseBytes = [Text.Encoding]::Unicode.GetBytes($Response.Content)
-      $HTMLFile.write($ResponseBytes)
-    }
-    $HTMLFile.getElementsByTagName('a') |
-      Where-Object { $_.href -like "about:/wasmerio/wasmer/releases/download/*/wasmer-${Target}.exe" } |
-      ForEach-Object { $_.href -replace 'about:', 'https://github.com' } |
-      Select-Object -First 1
-  }
+  Write-Host "Fetching latest release..."
+  $Response = Invoke-RestMethod -Uri 'https://api.github.com/repos/wasmerio/wasmer/releases/latest' -UseBasicParsing
+  ( 
+    $Response.assets | 
+    Where-Object { $_.name -eq "wasmer-${Target}.exe" } | 
+    Select-Object -First 1 
+  ).browser_download_url
 } else {
   "https://github.com/wasmerio/wasmer/releases/download/${Version}/wasmer-${Target}.exe"
 }
