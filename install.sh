@@ -259,7 +259,7 @@ version() {
 }
 
 semverParseInto() {
-  local RE='([0-9]+)[.]([0-9]+)[.]([0-9]+)([.0-9A-Za-z-]*)'
+  local RE='v?([0-9]+)[.]([0-9]+)[.]([0-9]+)([.0-9A-Za-z-]*)'
 
   # # strip word "v" if exists
   # version=$(echo "${1//v/}")
