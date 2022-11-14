@@ -246,7 +246,7 @@ ${reset}
   fi
 
   wasmer_download $1 && wasmer_link
-  wapm_download
+  wapm_download "$2"
   wasmer_reset
 }
 
@@ -419,9 +419,14 @@ wapm_download() {
 
   wasmer_install_status "downloading" "wapm-cli-$OS-$ARCH"
   # Download latest wapm version
-  wasmer_download_json LATEST_RELEASE "$WAPM_RELEASES_URL/latest" || return 1
-  WAPM_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//' | sed 's/v//g')
-  printf "Latest release: ${WAPM_RELEASE_TAG}\n"
+  if [ $# -eq 0 ]; then
+    wasmer_download_json LATEST_RELEASE "$WAPM_RELEASES_URL/latest" || return 1
+    WAPM_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//' | sed 's/v//g')
+    printf "Latest release: ${WAPM_RELEASE_TAG}\n"
+  else
+    WAPM_RELEASE_TAG="${1}"
+    printf "Installing provided version: ${WAPM_RELEASE_TAG}\n"
+  fi
 
   if which $INSTALL_DIRECTORY/bin/wapm >/dev/null; then
     WAPM_VERSION=$($INSTALL_DIRECTORY/bin/wapm --version | sed 's/wapm-cli //g')
@@ -516,4 +521,4 @@ else
   INSTALL_DIRECTORY="${WASMER_DIR}"
 fi
 
-wasmer_install $1 # $2
+wasmer_install $1 $2
