@@ -7,6 +7,7 @@ Remove-Item "~\.wasmer" -Recurse -Force -ErrorAction SilentlyContinue
 $env:WASMER_DIR = ""
 $v = $null; .\install.ps1
 ~\.wasmer\bin\wasmer.exe --version
+~\.wasmer\bin\wapm.exe --version
 
 # Test that we can install a specific version at a custom location.
 Remove-Item "~\wasmer-0.17.1" -Recurse -Force -ErrorAction SilentlyContinue
@@ -16,3 +17,5 @@ $WasmerVersion = ~\wasmer-0.17.1\bin\wasmer.exe --version
 if (!($WasmerVersion -like '*0.17.1*')) {
   throw $WasmerVersion
 }
+# WAPM currently always installs the latest, so just check that it's there
+~\wasmer-0.17.1\bin\wapm.exe --version
