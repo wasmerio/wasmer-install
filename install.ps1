@@ -92,7 +92,7 @@ Invoke-WebRequest $WapmUri -OutFile $WapmArchive -UseBasicParsing
 
 $Installed7Zip = if (-not (Get-Command Expand-7Zip -ErrorAction Ignore)) {
   Write-Host "Installing 7Zip script for tar extraction"
-  Install-Package -Scope CurrentUser -Force 7Zip4PowerShell > $null
+  Install-Package -Scope CurrentUser -Force 7Zip4PowerShell -ProviderName PowerShellGet > $null
   $true
 } else {
   $false
