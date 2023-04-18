@@ -189,6 +189,7 @@ initArch() {
   amd64) ARCH="amd64" ;;
   x86_64) ARCH="amd64" ;;
   aarch64) ARCH="aarch64" ;;
+  riscv64) ARCH="riscv64" ;;
   arm64) ARCH="arm64" ;; # This is for the macOS M1 ARM chips
   *)
     wasmer_error "The system architecture (${ARCH}) is not yet supported by this installation script."
