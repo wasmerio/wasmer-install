@@ -26,7 +26,6 @@ bold="\e[1m"
 dim="\e[2m"
 
 RELEASES_URL="https://github.com/wasmerio/wasmer/releases"
-WAPM_RELEASES_URL="https://github.com/wasmerio/wapm-cli/releases"
 
 WASMER_VERBOSE="verbose"
 if [ -z "$WASMER_INSTALL_LOG" ]; then
@@ -140,7 +139,7 @@ wasmer_link() {
   WASMER_PROFILE="$(wasmer_detect_profile)"
 
   LOAD_STR="\n# Wasmer\nexport WASMER_DIR=\"$INSTALL_DIRECTORY\"\n[ -s \"\$WASMER_DIR/wasmer.sh\" ] && source \"\$WASMER_DIR/wasmer.sh\"\n"
-  SOURCE_STR="# Wasmer config\nexport WASMER_DIR=\"$INSTALL_DIRECTORY\"\nexport WASMER_CACHE_DIR=\"\$WASMER_DIR/cache\"\nexport PATH=\"\$WASMER_DIR/bin:\$PATH:\$WASMER_DIR/globals/wapm_packages/.bin\"\n"
+  SOURCE_STR="# Wasmer config\nexport WASMER_DIR=\"$INSTALL_DIRECTORY\"\nexport WASMER_CACHE_DIR=\"\$WASMER_DIR/cache\"\nexport PATH=\"\$WASMER_DIR/bin:\$PATH\"\n"
 
   # We create the wasmer.sh file
   printf "$SOURCE_STR" >"$INSTALL_DIRECTORY/wasmer.sh"
@@ -175,7 +174,7 @@ wasmer_link() {
 
     if [ "$WASMER_INSTALL_LOG" = "$WASMER_VERBOSE" ]; then
       if [ "$wasmer_fresh_install" = true ]; then
-        printf "wasmer & wapm will be available the next time you open the terminal.\n"
+        printf "wasmer will be available the next time you open the terminal.\n"
         printf "If you want to have the commands available now please execute:\n\nsource $INSTALL_DIRECTORY/wasmer.sh$reset\n"
       fi
     fi
@@ -247,7 +246,6 @@ ${reset}
   fi
 
   wasmer_download $1 && wasmer_link
-  wapm_download
   wasmer_reset
 }
 
@@ -404,71 +402,6 @@ wasmer_download() {
   # Untar the wasmer contents in the install directory
   tar -C $INSTALL_DIRECTORY -zxf $DOWNLOAD_FILE
   return 0
-}
-
-wapm_download() {
-  # identify platform based on uname output
-  initArch || return 1
-  initOS || return 1
-
-  if [ "$ARCH" = "arm64" ]; then
-    ARCH="aarch64"
-  fi
-
-  # assemble expected release artifact name
-  BINARY="wapm-cli-${OS}-${ARCH}.tar.gz"
-
-  wasmer_install_status "downloading" "wapm-cli-$OS-$ARCH"
-  # Download latest wapm version
-  wasmer_download_json LATEST_RELEASE "$WAPM_RELEASES_URL/latest" || return 1
-  WAPM_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//' | sed 's/v//g')
-  printf "Latest release: ${WAPM_RELEASE_TAG}\n"
-
-  if which $INSTALL_DIRECTORY/bin/wapm >/dev/null; then
-    WAPM_VERSION=$($INSTALL_DIRECTORY/bin/wapm --version | sed 's/wapm-cli //g')
-    printf "WAPM already installed in ${INSTALL_DIRECTORY} with version: ${WAPM_VERSION}\n"
-
-    WAPM_COMPARE=$(semver_compare $WAPM_VERSION $WAPM_RELEASE_TAG)
-    case $WAPM_COMPARE in
-    # WAPM_VERSION = WAPM_RELEASE_TAG
-    0)
-      if [ $# -eq 0 ]; then
-        wasmer_warning "WAPM is already installed in the latest version: ${WAPM_RELEASE_TAG}"
-      else
-        wasmer_warning "WAPM is already installed with the same version: ${WAPM_RELEASE_TAG}"
-      fi
-      printf "Do you want to force the installation?"
-      wasmer_verify_or_quit || return 1
-      ;;
-      # WAPM_VERSION > WAPM_RELEASE_TAG
-    1)
-      wasmer_warning "the selected version (${WAPM_RELEASE_TAG}) is lower than current installed version ($WAPM_VERSION)"
-      printf "Do you want to continue installing WAPM $WAPM_RELEASE_TAG?"
-      wasmer_verify_or_quit || return 1
-      ;;
-      # WAPM_VERSION < WAPM_RELEASE_TAG (we continue)
-    -1) ;;
-    esac
-  fi
-
-  # fetch the real release data to make sure it exists before we attempt a download
-  wasmer_download_json RELEASE_DATA "$WAPM_RELEASES_URL/tag/v$WAPM_RELEASE_TAG" || return 1
-
-  BINARY_URL="$WAPM_RELEASES_URL/download/v$WAPM_RELEASE_TAG/$BINARY"
-  DOWNLOAD_FILE=$(mktemp -t wapm.XXXXXXXXXX)
-
-  printf "Downloading archive from ${BINARY_URL}\n"
-
-  wasmer_download_file "$BINARY_URL" "$DOWNLOAD_FILE" || return 1
-
-  printf "\033[K\n\033[1A"
-
-  wasmer_install_status "installing" "${INSTALL_DIRECTORY}"
-
-  mkdir -p $INSTALL_DIRECTORY
-
-  # Untar the WAPM contents in the install directory
-  tar -C $INSTALL_DIRECTORY -zxf $DOWNLOAD_FILE
 }
 
 wasmer_error() {

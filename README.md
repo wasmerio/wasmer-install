@@ -37,7 +37,7 @@ $v="1.0.0"; iwr https://win.wasmer.io -useb | iex
 **With [Homebrew](https://formulae.brew.sh/formula/wasmer):**
 
 ```sh
-brew install wasmer wapm
+brew install wasmer
 ```
 
 **With [Scoop](https://github.com/ScoopInstaller/Main/blob/master/bucket/wasmer.json):**
@@ -59,7 +59,6 @@ choco install wasmer
 
 ```sh
 cargo install wasmer-cli --features singlepass,cranelift # add --features=llvm for LLVM compilation support
-cargo install wapm-cli
 ```
 
 ## Environment Variables

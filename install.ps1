@@ -76,37 +76,6 @@ if (!(";$Path;".ToLower() -like "*;$WasmerBinDir;*".ToLower())) {
 
 Write-Host "Wasmer installed" -ForegroundColor Green
 
-$WapmUri = if ($true) {
-  Write-Host "Fetching latest WAPM release..."
-  $Response = Invoke-RestMethod -Uri 'https://api.github.com/repos/wasmerio/wapm-cli/releases/latest' -UseBasicParsing
-  (
-  $Response.assets |
-          Where-Object { $_.name -eq "wapm-cli-${Target}-amd64.tar.gz" } |
-          Select-Object -First 1
-  ).browser_download_url
-}
-
-Write-Host "Downloading WAPM..."
-
-Invoke-WebRequest $WapmUri -OutFile $WapmArchive -UseBasicParsing
-
-$Installed7Zip = if (-not (Get-Command Expand-7Zip -ErrorAction Ignore)) {
-  Write-Host "Installing 7Zip script for tar extraction"
-  Install-Package -Scope CurrentUser -Force 7Zip4PowerShell -ProviderName PowerShellGet > $null
-  $true
-} else {
-  $false
-}
-
-Write-Output "Inflating $WapmArchive..."
-Expand-7Zip $WapmArchive $Home
-Remove-Item $WapmArchive
-Write-Output "Extracting $WapmArchiveInflated to $WasmerBinDir..."
-# 7zip doesn't support inflating and extracting in the same step
-Expand-7Zip $WapmArchiveInflated "$WasmerBinDir\.."
-Remove-Item $WapmArchiveInflated
-Write-Host "Wapm installed" -ForegroundColor Green
-
 Write-Host "Finished" -ForegroundColor Green
 
 Write-Output "Run '$WasmerBinDir\wasmer --help' to get started"
