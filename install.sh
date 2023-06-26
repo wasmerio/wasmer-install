@@ -148,7 +148,7 @@ wasmer_link() {
     wasmer_error "Profile not found. Tried:\n* ${WASMER_PROFILE} (as defined in \$PROFILE)\n* ~/.bashrc\n* ~/.bash_profile\n* ~/.zshrc\n* ~/.profile.\n${reset}Append the following lines to the correct file yourself:\n${SOURCE_STR}"
     return 1
   else
-    printf "Updating bash profile $WASMER_PROFILE\n"
+    printf "Updating shell profile $WASMER_PROFILE\n"
     if ! grep -q 'wasmer.sh' "$WASMER_PROFILE"; then
       # if [[ $WASMER_PROFILE = *"fish"* ]]; then
       #   command fish -c 'set -U fish_user_paths $fish_user_paths ~/.wasmer/bin'
@@ -219,9 +219,9 @@ wasmer_install() {
   magenta3=""
 
   if which wasmer >/dev/null; then
-    printf "${reset}Welcome to the Wasmer bash installer!$reset\n"
+    printf "${reset}Welcome to the Wasmer installer!$reset\n"
   else
-    printf "${reset}Welcome to the Wasmer bash installer!$reset\n"
+    printf "${reset}Welcome to the Wasmer installer!$reset\n"
     if [ "$WASMER_INSTALL_LOG" = "$WASMER_VERBOSE" ]; then
       printf "
 ${magenta1}               ww
