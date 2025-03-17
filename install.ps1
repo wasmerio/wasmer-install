@@ -8,14 +8,17 @@ if ($v) {
   $Version = "${v}" # "v${v}"
 }
 if ($args.Length -eq 1) {
-  if ($args.Get(0) -eq "pre-release") {
-    $response = Invoke-WebRequest -Uri https://api.github.com/repos/wasmerio/wasmer/releases -UseBasicParsing
-    $releases = $response.Content | ConvertFrom-Json
-    $Version = $releases[0].tag_name
-    Write-Output "Installing latest pre-release version: $Version"
-  } else {
-    $Version = $args.Get(0)
-  }
+  $Version = $args.Get(0)
+}
+
+if ($Version -eq "pre-release") {
+  Write-Host "Fetching latest Wasmer pre-release..."
+  $response = Invoke-WebRequest -Uri https://api.github.com/repos/wasmerio/wasmer/releases -UseBasicParsing
+  $releases = $response.Content | ConvertFrom-Json
+  $Version = $releases[0].tag_name
+  Write-Output "Installing latest pre-release version: $Version"
+} elseif (![System.String]::IsNullOrEmpty($Version)) {
+  Write-Output "Installing requested version: $Version"
 }
 
 $WasmerInstall = $env:WASMER_DIR
