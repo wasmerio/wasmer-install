@@ -345,8 +345,18 @@ wasmer_download() {
     WASMER_RELEASE_TAG=$(echo "${LATEST_RELEASE}" | tr -s '\n' ' ' | sed 's/.*"tag_name":"//' | sed 's/".*//')
     printf "Latest release: ${WASMER_RELEASE_TAG}\n"
   else
-    WASMER_RELEASE_TAG="${1}"
-    printf "Installing provided version: ${WASMER_RELEASE_TAG}\n"
+    if [ "$1" = "prerelease" ]; then
+      if test -x "$(command -v jq)"; then
+        WASMER_RELEASE_TAG=$(curl -s -L https://api.github.com/repos/wasmerio/wasmer/releases | jq -r 'first | .tag_name')
+      else
+        wasmer_error "jq is required to install the latest pre-release version"
+        return 1
+      fi
+      printf "Latest pre-release: ${WASMER_RELEASE_TAG}\n"
+    else
+      WASMER_RELEASE_TAG="${1}"
+      printf "Installing provided version: ${WASMER_RELEASE_TAG}\n"
+    fi
   fi
 
   if which $INSTALL_DIRECTORY/bin/wasmer >/dev/null; then
