@@ -3,6 +3,7 @@
 **One-line commands to install Wasmer on your system.**
 
 [![Build Status](https://github.com/wasmerio/wasmer-install/workflows/ci/badge.svg?branch=master)](https://github.com/wasmerio/wasmer-install/actions)
+[![Packaging status](https://repology.org/badge/tiny-repos/wasmer.svg)](https://repology.org/project/wasmer/versions)
 
 ## Install Latest Version
 
@@ -80,6 +81,10 @@ cargo install wasmer-cli --features singlepass,cranelift # add --features=llvm f
   $env:WASMER_DIR = "C:\Program Files\wasmer"
   iwr https://win.wasmer.io -useb | iex
   ```
+
+## Packaging status
+
+[![Packaging status](https://repology.org/badge/vertical-allrepos/wasmer.svg)](https://repology.org/project/wasmer/versions)
 
 ## Compatibility
 
